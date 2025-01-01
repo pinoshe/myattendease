@@ -1,0 +1,6 @@
+// filepath: /c:/Users/pi/projects/myattendease/.gitignore
+node_modules/
+.env
+.env.development
+dist/
+coverage/
