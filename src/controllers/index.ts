@@ -81,9 +81,41 @@ export class IndexController {
         }
     }
 
+    public async updateAttendance(req: Request, res: Response): Promise<void> {
+        const { reportId, recordId } = req.params;
+        const { startTime, endTime } = req.body;
+
+        if (!startTime && !endTime) {
+            res.status(400).send('Bad Request: startTime or endTime must be provided');
+            return;
+        }
+
+        try {
+            const attendance = await Attendance.findOneAndUpdate(
+                { reportId, 'attendanceRecords.recordId': Number(recordId) },
+                { $set: { 'attendanceRecords.$.startTime': startTime, 'attendanceRecords.$.endTime': endTime } },
+                { new: true }
+            );
+
+            if (!attendance) {
+                res.status(404).send('Attendance record not found');
+                return;
+            }
+            res.json(attendance);
+        } catch (err) {
+            res.status(500).send('Server error');
+        }
+    }
+
     public async setApprovalStatus(req: Request, res: Response): Promise<void> {
         const { managerId, employeeId, reportId, recordId } = req.params;
         const { approved } = req.body;
+
+        if (typeof approved !== 'boolean') {
+            res.status(400).send('Bad Request: approved must be a boolean');
+            return;
+        }
+
         try {
             // Check if the manager is the manager of the employee
             const employee = await Employee.findOne({ employeeId: Number(employeeId), managerId: Number(managerId) });
